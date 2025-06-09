@@ -1,0 +1,151 @@
+<?php
+// payment.php
+
+$hostname = "localhost";
+$username = "root";
+$password = "";
+$db = "traveller";
+
+// Create connection
+$con = new mysqli($hostname, $username, $password, $db);
+
+// Check connection
+if ($con->connect_error) {
+    die("Connection failed: " . $con->connect_error);
+}
+
+$success = false;
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $name = $_POST['name'];
+    $email = $_POST['email'];
+    $tour_package = $_POST['tour_package'];
+    $price = $_POST['price'];
+    $cardname = $_POST['cardname'];
+    $cardnumber = $_POST['cardnumber'];
+
+    $stmt = $con->prepare("INSERT INTO payments (name, email, tour_package, price, cardholder_name, card_number) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("sssiss", $name, $email, $tour_package, $price, $cardname, $cardnumber);
+    $success = $stmt->execute();
+    $stmt->close();
+}
+
+$con->close();
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Travel Your Way - Payment</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      padding: 40px;
+    }
+
+    .payment-form {
+      max-width: 500px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+
+    input[type="text"], input[type="email"], input[type="number"], select {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0 16px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    .btn {
+      background-color: #27ae60;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      width: 100%;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      background-color: #219150;
+    }
+
+    .success-message {
+      display: <?php echo $success ? 'block' : 'none'; ?>;
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+      border-radius: 6px;
+      text-align: center;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<div class="payment-form">
+  <h2>Book Your Tour</h2>
+  <form method="POST" action="">
+    <label>Full Name</label>
+    <input type="text" name="name" required>
+
+    <label>Email Address</label>
+    <input type="email" name="email" required>
+
+    <label>Select Tour Package</label>
+    <select name="tour_package" id="tourSelect" onchange="updatePrice()" required>
+      <option value="">-- Choose a Package --</option>
+      <option value="Horton Plains Tour" data-price="140">Horton Plains Tour - $140</option>
+      <option value="Sigiriya Day Tour" data-price="135">Sigiriya Day Tour - $135</option>
+      <option value="Ella Adventure Tour" data-price="150">Ella Adventure Tour - $150</option>
+      <option value="Galle City Tour" data-price="130">Galle City Tour - $130</option>
+      <option value="Kandy City Tour" data-price="230">Kandy City Tour - $230</option>
+    </select>
+
+    <label>Tour Price (USD)</label>
+    <input type="number" name="price" id="priceInput" readonly>
+
+    <label>Cardholder Name</label>
+    <input type="text" name="cardname" required>
+
+    <label>Card Number</label>
+    <input type="text" name="cardnumber" maxlength="19" placeholder="1234 5678 9012 3456" required>
+
+    <button type="submit" class="btn">Pay Now</button>
+  </form>
+
+  <div class="success-message">
+    ✅ Payment successfully submitted!
+  </div>
+</div>
+
+<script>
+  function updatePrice() {
+    const select = document.getElementById("tourSelect");
+    const selectedOption = select.options[select.selectedIndex];
+    const price = selectedOption.getAttribute("data-price");
+    document.getElementById("priceInput").value = price ? price : '';
+  }
+</script>
+
+</body>
+</html>
